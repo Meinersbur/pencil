@@ -18,27 +18,54 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+AC_PREREQ([2.69])
 AC_INIT([pencil], [0.01], [carp@arm.com])
 AC_CONFIG_MACRO_DIR([m4])
 
-dnl Scala installation
-AC_SUBST(SCALA_HOME)
-AC_SUBST(SCALA_RUNTIME)
-AC_ARG_WITH([scala],
-  [AS_HELP_STRING([--with-scala=dir],[directory containing scala])],
-  [
-   SCALA_HOME="$with_scala"
-   SCALA_RUNTIME="$with_scala"/bin/scala
-  ],
-  [
-   SCALA_HOME="/usr/share/scala"
-   SCALA_RUNTIME=scala
-  ]
-)
+AC_PROG_SED
+AX_PROG_JAVAC
+#AX_CHECK_RQRD_CLASS(org.antlr.Tool)
 
-AC_CHECK_FILE(["$SCALA_HOME/lib/scala-compiler.jar"],[],[AC_MSG_ERROR([could not find file])])
-AC_CHECK_FILE(["$SCALA_HOME/lib/scala-library.jar"],[],[AC_MSG_ERROR([could not find file])])
-AC_CHECK_FILE(["$SCALA_HOME/lib/scala-reflect.jar"],[],[AC_MSG_ERROR([could not find file])])
+AC_SUBST(ac_srcdir)
+AC_PATH_PROG(ANT, ant)
+
+AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar])])
+AC_SUBST(SCALAC_CLASSPATH)
+
+AX_XTRA_CLASSPATH(SCALALIB_CLASSPATH,scala.App,scala-library.jar)
+AC_SUBST(SCALALIB_CLASSPATH)
+
+AX_XTRA_CLASSPATH(SCALAREFLECT_CLASSPATH,scala.tools.ant.Scalac,scala-reflect.jar,[],[AC_MSG_ERROR[Could not find scala-reflect.jar])])
+AC_SUBST(SCALAREFLECT_CLASSPATH)
+
+AX_XTRA_CLASSPATH(ANTLR3_CLASSPATH,org.antlr.Tool,antlr3.jar)
+AC_SUBST(ANTLR3_CLASSPATH)
+
+AX_XTRA_CLASSPATH(ANT_ANTLR3_CLASSPATH,org.apache.tools.ant.antlr.ANTLR3,ant-antlr3.jar,[],[AC_MSG_ERROR([could not find ant-antlr3.jar; put it in your CLASSPATH])])
+AC_SUBST(ANT_ANTLR3_CLASSPATH)
+
+AC_SUBST(CLASSPATH)
+
+
+dnl Scala installation
+AX_PROG_SCALAC
+#AC_SUBST(SCALA_HOME)
+#AC_SUBST(SCALA_RUNTIME)
+#AC_ARG_WITH([scala],
+#  [AS_HELP_STRING([--with-scala=dir],[directory containing scala])],
+#  [
+#   SCALA_HOME="$with_scala"
+#   SCALA_RUNTIME="$with_scala"/bin/scala
+#  ],
+#  [
+#   SCALA_HOME="/usr/share/scala"
+#   SCALA_RUNTIME=scala
+#  ]
+#)
+
+#AC_CHECK_FILE(["$SCALA_HOME/lib/scala-compiler.jar"],[],[AC_MSG_ERROR([could not find file])])
+#AC_CHECK_FILE(["$SCALA_HOME/lib/scala-library.jar"],[],[AC_MSG_ERROR([could not find file])])
+#AC_CHECK_FILE(["$SCALA_HOME/lib/scala-reflect.jar"],[],[AC_MSG_ERROR([could not find file])])
 
 dnl FileCheck installation
 AC_SUBST(FILE_CHECK_TOOL)
@@ -58,22 +85,22 @@ else
 fi
 
 dnl ANTLR3 jar
-AC_SUBST(ANTLR_HOME)
-AC_ARG_WITH([antlr3],
-  [AS_HELP_STRING([--with-antlr3=dir],[directory containing ANTLR3 jars])],
-  [ANTLR_HOME="$with_antlr3"],
-  [AC_MSG_ERROR([please specify path to ANTLR3 jars using --with-antlr3])]
-)
-AC_CHECK_FILE(["$ANTLR_HOME/antlr3.jar"],[],[AC_MSG_ERROR([could not find file])])
+#AC_SUBST(ANTLR_HOME)
+#AC_ARG_WITH([antlr3],
+#  [AS_HELP_STRING([--with-antlr3=dir],[directory containing ANTLR3 jars])],
+#  [ANTLR_HOME="$with_antlr3"],
+#  [AC_MSG_ERROR([please specify path to ANTLR3 jars using --with-antlr3])]
+#)
+#AC_CHECK_FILE(["$ANTLR_HOME/antlr3.jar"],[],[AC_MSG_ERROR([could not find file])])
 
 dnl ant-antlr3 jar
-AC_SUBST(ANT_ANTLR_HOME)
-AC_ARG_WITH([ant-antlr3],
-  [AS_HELP_STRING([--with-ant-antlr3=dir],[directory containing ant-antlr3 jar])],
-  [ANT_ANTLR_HOME="$with_ant_antlr3"],
-  [ANT_ANTLR_HOME="$ANTLR_HOME"]
-)
-AC_CHECK_FILE(["$ANT_ANTLR_HOME/ant-antlr3.jar"],[],[AC_MSG_ERROR([could not find file])])
+#AC_SUBST(ANT_ANTLR_HOME)
+#AC_ARG_WITH([ant-antlr3],
+#  [AS_HELP_STRING([--with-ant-antlr3=dir],[directory containing ant-antlr3 jar])],
+#  [ANT_ANTLR_HOME="$with_ant_antlr3"],
+#  [ANT_ANTLR_HOME="$ANTLR_HOME"]
+#)
+#AC_CHECK_FILE(["$ANT_ANTLR_HOME/ant-antlr3.jar"],[],[AC_MSG_ERROR([could not find file])])
 
 AC_CONFIG_FILES([linker], [chmod +x linker])
 AC_CONFIG_FILES([optimizer], [chmod +x optimizer])

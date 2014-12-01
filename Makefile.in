@@ -27,20 +27,32 @@ export SCALA_HOME=@SCALA_HOME@
 export ANTLR_HOME=@ANTLR_HOME@
 export ANT_ANTLR_HOME=@ANT_ANTLR_HOME@
 export FILE_CHECK_TOOL=@FILE_CHECK_TOOL@
-export CLASSPATH=${ANT_ANTLR_HOME}/ant-antlr3.jar:${ANTLR_HOME}/antlr3.jar
+#export CLASSPATH=${ANT_ANTLR_HOME}/ant-antlr3.jar:${ANTLR_HOME}/antlr3.jar
 export G_PREFIX=${PREFIX}/@prefix@
 
 JAR_ROOT=${G_PREFIX}/share/pencil
 LIB_ROOT=${G_PREFIX}/lib/
 BIN_ROOT=${G_PREFIX}/bin/
+ANT=@ANT@
+abs_srcdir=@abs_srcdir@
+SCALAC_CLASSPATH=@SCALAC_CLASSPATH@
+SCALALIB_CLASSPATH=@SCALALIB_CLASSPATH@
+ANTLR3_CLASSPATH=@ANTLR3_CLASSPATH@
+ANT_ANTLR3_CLASSPATH=@ANT_ANTLR3_CLASSPATH@
+
+export CLASSPATH:=@CLASSPATH@:${ANTLR3_CLASSPATH}:${ANT_ANTLR3_CLASSPATH}
+#CLASSPATH_ENV = CLASSPATH=${CLASSPATH}:${SCALA_CLASSPATH}:${SCALALIB_CLASSPATH}:${SCALAREFLECT_CLASSPATH}
+
 
 all: ${ALL}
 
 linker:
-	ant  -Dname=linker -Dgrammar=pencil dist
+	echo ${CLASSPATH}
+	${ANT} -f ${abs_srcdir}/build.xml -Dname=linker -Dgrammar=pencil dist
 
 optimizer:
-	ant  -Dname=optimizer -Dgrammar=pencil dist
+	echo ${CLASSPATH}
+	${ANT} -f ${abs_srcdir}/build.xml -Dname=optimizer -Dgrammar=pencil dist
 
 check:${ALL:%=%-check}
 
@@ -56,10 +68,10 @@ clean:${ALL:%=%-clean} docs-clean packages-clean
 	echo ${CLEAN}
 
 linker-clean:
-	ant  -Dname=linker -Dgrammar=pencil clean
+	${ANT} -f ${abs_srcdir}/build.xml -Dname=linker -Dgrammar=pencil clean
 
 optimizer-clean:
-	ant  -Dname=optimizer -Dgrammar=pencil clean
+	${ANT} -f ${abs_srcdir}/build.xml -Dname=optimizer -Dgrammar=pencil clean
 
 distclean: clean
 	rm -f config.status config.log optimizer linker Makefile
