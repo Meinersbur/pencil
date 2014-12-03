@@ -44,26 +44,9 @@
       </exec>
     </target>
 
-    <property environment="_env"/>
-    <property name="_scala.home" value="${env.SCALA_HOME}"/>
-    <property name="_antlr.home" value="${env.ANTLR_HOME}"/>
-    <property name="_scala.compiler" value="${env.SCALAC_CLASSPATH}"/>
-	<property name="_scala.library" value="${env.SCALALIB_CLASSPATH}"/>
-	<property name="_scala.reflect" value="${env.SCALAREFLECT_CLASSPATH}"/>
-	
     <target name="init" depends="generate-versioninfo">
-		<property name="scala-library.jar" value="${scala.home}/lib/scala-library.jar" />
-		<path id="build.classpath">
-			<pathelement location="${scala-library.jar}"   />
-			<!--<pathelement location="${your.path}"   />-->
-			<pathelement location="${build.dir}"   />
-		</path>
-		<taskdef resource="scala/tools/ant/antlib.xml">
-			<classpath>
-			<pathelement location="${scala.home}/lib/scala-compiler.jar"   />
-			<pathelement location="${scala-library.jar}"   />
-			</classpath>
-		</taskdef>
+      <taskdef resource="scala/tools/ant/antlib.xml">
+      </taskdef>
       <mkdir dir="${parser-loc}"/>
       <mkdir dir="${bin}"/>
       <mkdir dir="${lib-bin}"/>
@@ -89,13 +72,11 @@
 
       <scalac
         deprecation="yes"
-        addparams="-feature"
+        addparams="-feature -usejavacp"
         destdir="${bin}">
         <classpath>
           <pathelement location="${bin}"/>
-          <pathelement location="${scala.home}/lib/scala-library.jar"   />
-          <pathelement location="${antlr.home}/antlr3.jar"   />
-          <pathelement location="${lib-name}.jar"   />
+          <pathelement location="${lib-name}.jar"/>
         </classpath>
         <src>
           <pathelement path="${src}/scala/com/arm/carp/apps/${name}/"/>
@@ -110,9 +91,7 @@
         deprecation="yes"
         addparams="-feature"
         destdir="${lib-bin}">
-        <classpath>
-          <pathelement location="${scala.home}/lib/scala-library.jar"   />
-        </classpath>
+
         <src>
           <pathelement path="${src}/scala/com/arm/carp/pencil/"/>
         </src>

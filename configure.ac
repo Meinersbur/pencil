@@ -22,26 +22,26 @@ AC_PREREQ([2.69])
 AC_INIT([pencil], [0.01], [carp@arm.com])
 AC_CONFIG_MACRO_DIR([m4])
 
+AM_MAINTAINER_MODE
+
 AC_PROG_SED
 AX_PROG_JAVAC
-#AX_CHECK_RQRD_CLASS(org.antlr.Tool)
 
-AC_SUBST(ac_srcdir)
 AC_PATH_PROG(ANT, ant)
 
-AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar])])
+AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar, add it to CLASSPATH])])
 AC_SUBST(SCALAC_CLASSPATH)
 
-AX_XTRA_CLASSPATH(SCALALIB_CLASSPATH,scala.App,scala-library.jar)
+AX_XTRA_CLASSPATH(SCALALIB_CLASSPATH,scala.App,scala-library.jar,[],[AC_MSG_ERROR([Could not find scala-library.jar, add it to CLASSPATH])])
 AC_SUBST(SCALALIB_CLASSPATH)
 
-AX_XTRA_CLASSPATH(SCALAREFLECT_CLASSPATH,scala.tools.ant.Scalac,scala-reflect.jar,[],[AC_MSG_ERROR[Could not find scala-reflect.jar])])
+AX_XTRA_CLASSPATH(SCALAREFLECT_CLASSPATH,scala.reflect.api.BuildUtils,scala-reflect.jar,[],[AC_MSG_ERROR([Could not find scala-reflect.jar, add it to CLASSPATH])])
 AC_SUBST(SCALAREFLECT_CLASSPATH)
 
-AX_XTRA_CLASSPATH(ANTLR3_CLASSPATH,org.antlr.Tool,antlr3.jar)
+AX_XTRA_CLASSPATH(ANTLR3_CLASSPATH,org.antlr.Tool,antlr3.jar,[],[AC_MSG_ERROR([Could not find antlr3.jar, add it to CLASSPATH])])
 AC_SUBST(ANTLR3_CLASSPATH)
 
-AX_XTRA_CLASSPATH(ANT_ANTLR3_CLASSPATH,org.apache.tools.ant.antlr.ANTLR3,ant-antlr3.jar,[],[AC_MSG_ERROR([could not find ant-antlr3.jar; put it in your CLASSPATH])])
+AX_XTRA_CLASSPATH(ANT_ANTLR3_CLASSPATH,org.apache.tools.ant.antlr.ANTLR3,ant-antlr3.jar,[],[AC_MSG_ERROR([Could not find ant-antlr3.jar, add it to CLASSPATH])])
 AC_SUBST(ANT_ANTLR3_CLASSPATH)
 
 AC_SUBST(CLASSPATH)
