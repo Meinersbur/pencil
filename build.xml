@@ -22,12 +22,13 @@
 -->
 
 <project name="antlr" default="dist" basedir=".">
+    <property name="builddir" location="."/>
     <property name="src" location="src"/>
     <property name="res" location="res"/>
-    <property name="gen"  location="gen"/>
-    <property name="bin"  location="bin/${name}"/>
+    <property name="gen"  location="${builddir}/gen"/>
+    <property name="bin"  location="${builddir}/bin/${name}"/>
     <property name="lib-name"  location="pencil"/>
-    <property name="lib-bin"  location="bin/${lib-name}"/>
+    <property name="lib-bin"  location="${builddir}/bin/${lib-name}"/>
     <property name="grammar"  value="${name}"/>
     <property name="antlr-grammar" location="grammar/${grammar}.g"/>
 
@@ -76,7 +77,7 @@
         destdir="${bin}">
         <classpath>
           <pathelement location="${bin}"/>
-          <pathelement location="${lib-name}.jar"/>
+          <pathelement location="${builddir}/${lib-name}.jar"/>
         </classpath>
         <src>
           <pathelement path="${src}/scala/com/arm/carp/apps/${name}/"/>
@@ -91,7 +92,6 @@
         deprecation="yes"
         addparams="-feature"
         destdir="${lib-bin}">
-
         <src>
           <pathelement path="${src}/scala/com/arm/carp/pencil/"/>
         </src>
@@ -100,14 +100,14 @@
 
     <target name="dist-lib" depends="compile-lib">
       <jar
-        destfile="${lib-name}.jar"
+        destfile="${builddir}/${lib-name}.jar"
         basedir="${lib-bin}">
       </jar>
     </target>
 
     <target name="dist" depends="compile">
       <jar
-        destfile="${name}.jar"
+        destfile="${builddir}/${name}.jar"
         basedir="${bin}">
         <manifest>
           <attribute
@@ -117,4 +117,3 @@
       </jar>
     </target>
 </project>
-

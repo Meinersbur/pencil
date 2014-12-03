@@ -35,6 +35,7 @@ LIB_ROOT=${G_PREFIX}/lib/
 BIN_ROOT=${G_PREFIX}/bin/
 ANT=@ANT@
 abs_srcdir=@abs_srcdir@
+abs_builddir=@abs_builddir@
 SCALAC_CLASSPATH=@SCALAC_CLASSPATH@
 SCALALIB_CLASSPATH=@SCALALIB_CLASSPATH@
 SCALAREFLECT_CLASSPATH=@SCALAREFLECT_CLASSPATH@
@@ -46,10 +47,10 @@ export CLASSPATH:=@CLASSPATH@:${SCALAC_CLASSPATH}${SCALALIB_CLASSPATH}${SCALAREF
 all: ${ALL}
 
 linker:
-	${ANT} -f ${abs_srcdir}/build.xml -Dname=linker -Dgrammar=pencil dist
+	${ANT} -f ${abs_srcdir}/build.xml "-Dbuilddir=${abs_builddir}" -Dname=linker -Dgrammar=pencil dist
 
 optimizer:
-	${ANT} -f ${abs_srcdir}/build.xml -Dname=optimizer -Dgrammar=pencil dist
+	${ANT} -f ${abs_srcdir}/build.xml "-Dbuilddir=${abs_builddir}" -Dname=optimizer -Dgrammar=pencil dist
 
 check:${ALL:%=%-check}
 
