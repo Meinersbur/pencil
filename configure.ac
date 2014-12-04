@@ -25,8 +25,8 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl Programs
 AC_PROG_SED
 AX_PROG_JAVAC
+AX_PROG_SCALA
 AC_PATH_PROG(ANT, ant)
-
 
 dnl Paths to required jars
 AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar, add it to CLASSPATH])])
@@ -64,9 +64,12 @@ else
   FILE_CHECK_TOOL=`PATH=$PATH:$FILE_CHECK_HOME which FileCheck`
 fi
 
+
+dnl Generate output
 AC_CONFIG_FILES([linker], [chmod +x linker])
 AC_CONFIG_FILES([optimizer], [chmod +x optimizer])
 AC_CONFIG_FILES([pencil-linker], [chmod +x pencil-linker])
 AC_CONFIG_FILES([pencil-optimizer], [chmod +x pencil-optimizer])
 AC_CONFIG_FILES([Makefile])
+
 AC_OUTPUT
