@@ -27,8 +27,8 @@
     <property name="res" location="res"/>
     <property name="gen" location="${builddir}/gen"/>
     <property name="bin" location="${builddir}/bin/${name}"/>
-    <property name="lib-name" location="${builddir}/pencil"/>
-    <property name="lib-bin" location="${builddir}/bin/${lib-name}"/>
+    <property name="lib-jar" location="${builddir}/pencil.jar"/>
+    <property name="lib-bin" location="${builddir}/bin/pencil"/>
     <property name="grammar" value="${name}"/>
     <property name="antlr-grammar" location="grammar/${grammar}.g"/>
 
@@ -77,7 +77,7 @@
         destdir="${bin}">
         <classpath>
           <pathelement location="${bin}"/>
-          <pathelement location="${lib-name}.jar"/>
+          <pathelement location="${lib-jar}"/>
         </classpath>
         <src>
           <pathelement path="${src}/scala/com/arm/carp/apps/${name}/"/>
@@ -100,7 +100,7 @@
 
     <target name="dist-lib" depends="compile-lib">
       <jar
-        destfile="${lib-name}.jar"
+        destfile="${lib-jar}"
         basedir="${lib-bin}">
       </jar>
     </target>
