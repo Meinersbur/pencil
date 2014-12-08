@@ -28,6 +28,7 @@ AX_PROG_JAVAC
 AX_PROG_SCALA
 AC_PATH_PROG(ANT, ant)
 
+
 dnl Paths to required jars
 AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar, add it to CLASSPATH])])
 AC_SUBST(SCALAC_CLASSPATH)
