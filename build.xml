@@ -26,16 +26,30 @@
     <property name="src" location="src"/>
     <property name="res" location="res"/>
     <property name="gen" location="${builddir}/gen"/>
-    <property name="bin" location="${builddir}/bin/${name}"/>
+	
+	<property name="lib-bin" location="${builddir}/bin/pencil"/>
+    <property name="linker-bin" location="${builddir}/bin/linker"/>
+	<property name="optimizer-bin" location="${builddir}/bin/optimizer"/>
+	
     <property name="lib-jar" location="${builddir}/pencil.jar"/>
-    <property name="lib-bin" location="${builddir}/bin/pencil"/>
-    <property name="grammar" value="${name}"/>
+	<property name="optimizer-jar" location="${builddir}/optimizer.jar"/>
+	<property name="linker-jar" location="${builddir}/linker.jar"/>
+   
+    <property name="grammar" value="pencil"/>
     <property name="antlr-grammar" location="grammar/${grammar}.g"/>
 
     <property name="parser-loc" location="${gen}/java/com/arm/carp/${grammar}/parser"/>
 
     <property name="versioninfo-scala-loc" location="${gen}/scala/com/arm/carp/apps"/>
 
+	<property environment="ENV"/> 
+	
+	
+    <target name="init">
+      <taskdef resource="scala/tools/ant/antlib.xml"/>
+    </target>
+	
+	
     <target name="generate-versioninfo">
       <mkdir dir="${versioninfo-scala-loc}"/>
       <exec executable="sh">
@@ -45,75 +59,103 @@
       </exec>
     </target>
 
-    <target name="init" depends="generate-versioninfo">
-      <taskdef resource="scala/tools/ant/antlib.xml">
-      </taskdef>
-      <mkdir dir="${parser-loc}"/>
-      <mkdir dir="${bin}"/>
-      <mkdir dir="${lib-bin}"/>
-    </target>
 
     <target name="clean">
-      <delete dir="${bin}"/>
-      <delete dir="${gen}"/>
+	  <delete dir="${gen}"/>
+	  <delete dir="${lib-bin}"/>
+      <delete dir="${optimizer-bin}"/>
+	  <delete dir="${linker-bin}"/>
+
+	  <delete file="${lib-jar}"/>
+	  <delete file="${optimizer-jar}"/>
+	  <delete file="${linker-jar}"/>
     </target>
 
+	
     <target name="run-antlr" depends="init">
+	  <mkdir dir="${parser-loc}"/>
       <antlr:ant-antlr3 xmlns:antlr="antlib:org/apache/tools/ant/antlr"
         target="${antlr-grammar}"
         outputdirectory="${parser-loc}"/>
     </target>
-
-    <target name="compile" depends="init,run-antlr,dist-lib">
-      <javac debug="true" debuglevel="lines,vars,source"
-        destdir="${bin}">
-        <compilerarg value="-Xlint:unchecked"/>
-        <src path="${parser-loc}"/>
-      </javac>
-
-      <scalac
-        deprecation="yes"
-        addparams="-feature -usejavacp"
-        destdir="${bin}">
-        <classpath>
-          <pathelement location="${bin}"/>
-          <pathelement location="${lib-jar}"/>
-        </classpath>
-        <src>
-          <pathelement path="${src}/scala/com/arm/carp/apps/${name}/"/>
-          <pathelement path="${src}/scala/com/arm/carp/frontends/${grammar}/"/>
-          <pathelement path="${versioninfo-scala-loc}"/>
-        </src>
-      </scalac>
-    </target>
+	
 
     <target name="compile-lib" depends="init">
-      <scalac
-        deprecation="yes"
-        addparams="-feature"
-        destdir="${lib-bin}">
-        <src>
-          <pathelement path="${src}/scala/com/arm/carp/pencil/"/>
-        </src>
+	  <mkdir dir="${lib-bin}"/>
+      <scalac deprecation="yes" addparams="-feature" destdir="${lib-bin}" srcdir="${src}/scala" includes="com/arm/carp/pencil/**" >
+		<classpath>
+		  <pathelement path="${ENV.CLASSPATH}"/>
+		  <pathelement location="${lib-bin}"/>
+		</classpath>
       </scalac>
     </target>
 
+	
+    <target name="compile-optimizer" depends="init,generate-versioninfo,run-antlr,dist-lib">
+	  <mkdir dir="${optimizer-bin}"/>
+      <javac debug="true" debuglevel="lines,vars,source" destdir="${optimizer-bin}" includeantruntime="true" srcdir="${gen}/java" includes="com/arm/carp/${grammar}/parser/**">
+        <compilerarg value="-Xlint:unchecked"/>
+      </javac>
+
+      <scalac deprecation="yes" addparams="-feature -usejavacp" destdir="${optimizer-bin}">
+        <classpath>
+		  <pathelement location="${lib-jar}"/>
+          <pathelement location="${optimizer-bin}"/>
+        </classpath>
+		<src>
+          <pathelement location="${src}/scala"/>
+		  <pathelement location="${gen}/scala"/>
+		</src>
+		<include name="com/arm/carp/apps/optimizer/**" />
+		<include name="com/arm/carp/apps/Version.scala" />
+      </scalac>
+    </target>
+
+	
+    <target name="compile-linker" depends="init,generate-versioninfo,run-antlr,dist-lib">
+	  <mkdir dir="${linker-bin}"/>
+      <javac debug="true" debuglevel="lines,vars,source" destdir="${linker-bin}" includeantruntime="true" srcdir="${gen}/java" includes="com/arm/carp/${grammar}/parser/**" >
+        <compilerarg value="-Xlint:unchecked"/>
+      </javac>
+
+      <scalac deprecation="yes" addparams="-feature -usejavacp" destdir="${linker-bin}">
+        <classpath>
+          <pathelement location="${lib-jar}"/>
+		  <pathelement location="${linker-bin}"/>
+        </classpath>
+		<src>
+          <pathelement location="${src}/scala"/>
+		  <pathelement location="${gen}/scala"/>
+		  <pathelement location="${gen}/java"/>
+		</src>
+		<include name="com/arm/carp/apps/linker/**" />
+		<include name="com/arm/carp/apps/Version.scala" />
+      </scalac>
+    </target>
+
+	
     <target name="dist-lib" depends="compile-lib">
-      <jar
-        destfile="${lib-jar}"
-        basedir="${lib-bin}">
+      <jar destfile="${lib-jar}" basedir="${lib-bin}">
       </jar>
     </target>
 
-    <target name="dist" depends="compile">
-      <jar
-        destfile="${builddir}/${name}.jar"
-        basedir="${bin}">
+	
+    <target name="dist-optimizer" depends="compile-optimizer">
+      <jar destfile="${builddir}/optimizer.jar" basedir="${optimizer-bin}">
         <manifest>
-          <attribute
-            name="Main-Class"
-            value="com.arm.carp.apps.${name}.Main"/>
+          <attribute name="Main-Class" value="com.arm.carp.apps.optimizer.Main"/>
         </manifest>
       </jar>
     </target>
+	
+	
+    <target name="dist-linker" depends="compile-linker">
+      <jar destfile="${builddir}/linker.jar" basedir="${linker-bin}">
+        <manifest>
+          <attribute name="Main-Class" value="com.arm.carp.apps.linker.Main"/>
+        </manifest>
+      </jar>
+    </target>
+	
+	 <target name="dist" depends="dist-optimizer,dist-linker"/>
 </project>

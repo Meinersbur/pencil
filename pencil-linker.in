@@ -20,10 +20,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-JAR_PREFIX=@prefix@/share/pencil
+JAR_PREFIX="@prefix@/share/pencil"
+ANTLR3_CLASSPATH="@ANTLR3_CLASSPATH@"
+CONFIGURETIME_CLASSPATH="@CLASSPATH@"
+SCRIPTDIR="$(dirname $0)"
 
-linkerjar="$JAR_PREFIX/linker.jar"
+if [ -f "${SCRIPTDIR}/linker.jar" ]; then
+	linkerjar="${SCRIPTDIR}/linker.jar"
+else
+	linkerjar="${JAR_PREFIX}/linker.jar"
+fi
 
-export CLASSPATH=${CLASSPATH}:$JAR_PREFIX/pencil.jar
+if [ -f "${SCRIPTDIR}/pencil.jar" ]; then
+	penciljar="${SCRIPTDIR}/pencil.jar"
+else
+	penciljar="${JAR_PREFIX}/pencil.jar"
+fi
 
-@SCALA_RUNTIME@ "$linkerjar" "$@"
+CLASSPATH="${CLASSPATH}:${CONFIGURETIME_CLASSPATH}:${ANTLR3_CLASSPATH}${penciljar}" "@SCALA@" "${linkerjar}" "$@"

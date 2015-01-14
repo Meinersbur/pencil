@@ -22,12 +22,17 @@ AC_PREREQ([2.69])
 AC_INIT([pencil], [0.01], [carp@arm.com])
 AC_CONFIG_MACRO_DIR([m4])
 
+# Automake
+AC_CONFIG_AUX_DIR([build-aux])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_MAINTAINER_MODE([enable])
+
 dnl Programs
 AC_PROG_SED
 AX_PROG_JAVAC
 AX_PROG_SCALA
 AC_PATH_PROG(ANT, ant)
-
+AC_PATH_PROG(SCALADOC, scaladoc)
 
 dnl Paths to required jars
 AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar, add it to CLASSPATH])])
@@ -66,11 +71,35 @@ else
 fi
 
 
+dnl pencil runtime
+AC_SUBST(PENCIL_H_PATH)
+AX_SUBMODULE(pencil-util,no|build|bundled|system|no,bundled)
+case "$with_pencil_util" in
+no)
+	;;
+bundled)
+	PENCIL_UTIL_BUILDDIR="${abs_builddir}/pencil-util"
+	PENCIL_UTIL_SRCDIR="${abs_srcdir}/pencil-util"
+	PENCIL_H_PATH="${PENCIL_UTIL_SRCDIR}/pencil-util/include/pencil.h"
+	;;
+build)
+	PENCIL_UTIL_BUILDDIR=`echo @abs_builddir@ | $with_pencil_util_builddir/config.status --file=-`
+	PENCIL_UTIL_SRCDIR=`echo @abs_srcdir@ | $with_pencil_util_builddir/config.status --file=-`
+	PENCIL_H_PATH="${PENCIL_UTIL_SRCDIR}/pencil-util/include/pencil.h"
+	;;
+system)
+	;;
+esac
+
+
+if test x"$with_pencil_util" = xbundled; then
+	AC_CONFIG_SUBDIRS(pencil-util)
+fi
+
 dnl Generate output
-AC_CONFIG_FILES([linker], [chmod +x linker])
-AC_CONFIG_FILES([optimizer], [chmod +x optimizer])
 AC_CONFIG_FILES([pencil-linker], [chmod +x pencil-linker])
 AC_CONFIG_FILES([pencil-optimizer], [chmod +x pencil-optimizer])
 AC_CONFIG_FILES([Makefile])
+dnl AC_CONFIG_FILES([testsuite/Makefile])
 
 AC_OUTPUT
