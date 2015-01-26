@@ -32,6 +32,8 @@ ANTLR3_CLASSPATH=@ANTLR3_CLASSPATH@
 ANT_ANTLR3_CLASSPATH=@ANT_ANTLR3_CLASSPATH@
 export CLASSPATH:=@CLASSPATH@:${SCALAC_CLASSPATH}${SCALALIB_CLASSPATH}${SCALAREFLECT_CLASSPATH}${ANTLR3_CLASSPATH}${ANT_ANTLR3_CLASSPATH}
 
+CLEANFILES = dbg.log linker.log linker.sum optimizer.log optimizer.sum \
+	testsuite/code/pencil_pre.h testsuite/code/pencil_post.h
 
 
 all-local: ${ALL}
