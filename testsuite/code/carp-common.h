@@ -21,9 +21,7 @@
  */
 
 #include <stdlib.h>
-//#define inline
-//#include <pencil.h>
-//#undef inline
+#include "pencil_post.h"
 
 #define SUCCESS 0
 #define FAIL 255
@@ -32,6 +30,7 @@
 #define true 1
 #define false 0
 
+#undef assert
 void assert(int cond) {
   if (!cond) {
     exit (-1);

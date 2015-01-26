@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 proc mark_error_test {} {
-    if {$::tool_name == "pencil-linker"} {
+    if {$::tool_name == "linker"} {
         set ::expect_linker_error true
     }
     set ::should_compile false
@@ -81,7 +81,7 @@ proc run_tool {} {
     set expected $error
   }
 
-  spawn "./$::tool_name" -o "$::output_filename" "$::input_filename" {*}$::additional_option {*}$::additional_files
+  spawn "./pencil-$::tool_name" -o "$::output_filename" "$::input_filename" {*}$::additional_option {*}$::additional_files --include "${::objdir}/code/pencil_pre.h"
 
   # Collect all output
   set lines {}
@@ -115,7 +115,7 @@ proc run_tool {} {
   set linkerrors [regexp -all -inline {Linker error:(.*)} $lines]
   if {($linkerrors == {}) && ! $::expect_linker_error ||
       ($linkerrors != {}) && $::expect_linker_error } {
-      if {$::tool_name == "pencil-linker"} {
+      if {$::tool_name == "linker"} {
           pass "${::input_filename}: Link test"
       }
   } else {
@@ -172,10 +172,10 @@ proc compile_c_weak {} {
 
 proc prepare {} {
     set input_basename [file tail $::input_filename]
-    set outdir "./testsuite/code/pencil/simple"
-    set ::output_filename "${outdir}/${input_basename}.${::tool_name}.c"
+    set testoutdir "${::objdir}/code/pencil/simple"
+    set ::output_filename "${testoutdir}/${input_basename}.${::tool_name}.c"
     set ::check_filename "${::input_filename}.${::tool_name}.check"
-    set ::binary "${outdir}/${input_basename}.${::tool_name}.run"
+    set ::binary "${testoutdir}/${input_basename}.${::tool_name}.run"
     set ::check_file [open $::check_filename w]
     set ::should_compile true
     set ::expect_linker_error false
@@ -200,7 +200,7 @@ proc prepare_for_compilation {} {
 
 proc compile_c {} {
     prepare_for_compilation
-    spawn gcc -std=c99 -I../pencil-util/include -include "${::srcdir}/code/carp-common.h"  "${::output_filename}" -o "${::binary}" -lm
+    spawn gcc -std=c99 -include "${::srcdir}/code/carp-common.h" "${::output_filename}" -o "${::binary}" -lm
     catch wait result
     set code [lindex $result 3]
     if {$code != 0} {
@@ -211,7 +211,7 @@ proc compile_c {} {
 }
 
 proc run_binary {} {
-  spawn "./${::binary}"
+  spawn "${::binary}"
   catch wait result
   set code [lindex $result 3]
   if {$code != 0} {

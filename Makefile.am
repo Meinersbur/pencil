@@ -1,13 +1,14 @@
 # @configure_input@
 
 ACLOCAL_AMFLAGS = -I m4
-AUTOMAKE_OPTIONS = dejagnu
+#AUTOMAKE_OPTIONS = dejagnu
 
-EXTRA_DEJAGNU_SITE_CONFIG = testsuite/site.exp
-DEJATOOL = optimizer 
+#EXTRA_DEJAGNU_SITE_CONFIG = testsuite/site.exp
+#DEJATOOL = optimizer 
 #linker
-RUNTESTFLAGS = --debug
-override RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir $$srcdir/testsuite
+#RUNTESTFLAGS = --debug
+#override RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir $$abs_srcdir/testsuite
+#srcdir = ${abs_srcdir}
 
 #ALL=optimizer linker
 #SUBDIRS = testsuite
@@ -98,3 +99,29 @@ packages-clean:
 
 bin_SCRIPTS = pencil-linker pencil-optimizer
 pkgdata_DATA = linker.jar optimizer.jar pencil.jar
+
+check: check-optimizer check-linker
+
+.PHONY: check-optimizer check-linker
+
+testsuite:
+	mkdir -p "${abs_builddir}/testsuite"
+
+testsuite/code: testsuite
+	mkdir -p "${abs_builddir}/testsuite/code"
+	
+testsuite/code/pencil_pre.h: Makefile testsuite/code
+	echo "#include <pencil.h>" | cpp -P -D__PENCIL__ @PENCIL_UTIL_CPPARGS@ > $@
+
+testsuite/code/pencil_post.h: Makefile testsuite/code
+	if test "x@PENCIL_UTIL_SRCDIR@"="x"; then                              \
+		echo "#include <@PENCIL_UTIL_SRCDIR@/include/pencil.h>" > $@;  \
+	else                                                                   \
+		echo "#include <pencil.h>" > $@;                               \
+	fi; 
+
+check-optimizer: testsuite testsuite/code/pencil_pre.h testsuite testsuite/code/pencil_post.h optimizer
+	runtest --tool optimizer --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}"  --debug 
+
+check-linker: testsuite testsuite/code/pencil_pre.h testsuite testsuite/code/pencil_post.h linker
+	runtest --tool linker --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}"

@@ -20,5 +20,5 @@
 
 source [file join [file dirname [info script]] common.exp]
 proc test_pencil {file} {
-  test_tool "pencil-optimizer" $file
+  test_tool "optimizer" $file
 }

@@ -22,7 +22,7 @@ AC_PREREQ([2.69])
 AC_INIT([pencil], [0.01], [carp@arm.com])
 AC_CONFIG_MACRO_DIR([m4])
 
-# Automake
+dnl Automake
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_MAINTAINER_MODE([enable])
@@ -33,6 +33,9 @@ AX_PROG_JAVAC
 AX_PROG_SCALA
 AC_PATH_PROG(ANT, ant)
 AC_PATH_PROG(SCALADOC, scaladoc)
+
+abs_builddir=`pwd` # ${ac_abs_builddir} 
+abs_srcdir=$(readlink -m "${srcdir}")
 
 dnl Paths to required jars
 AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar, add it to CLASSPATH])])
@@ -71,35 +74,47 @@ else
 fi
 
 
+AC_CHECK_HEADERS([pencil.h], [HAVE_PENCIL_H=yes], [HAVE_PENCIL_H=no])
+
 dnl pencil runtime
-AC_SUBST(PENCIL_H_PATH)
-AX_SUBMODULE(pencil-util,no|build|bundled|system|no,bundled)
+AC_SUBST(PENCIL_UTIL_BUILDDIR)
+AC_SUBST(PENCIL_UTIL_SRCDIR)
+AX_SUBMODULE(pencil-util,no|build|bundled|system,bundled)
 case "$with_pencil_util" in
 no)
+	#TODO: disable check
 	;;
 bundled)
 	PENCIL_UTIL_BUILDDIR="${abs_builddir}/pencil-util"
 	PENCIL_UTIL_SRCDIR="${abs_srcdir}/pencil-util"
-	PENCIL_H_PATH="${PENCIL_UTIL_SRCDIR}/pencil-util/include/pencil.h"
 	;;
 build)
 	PENCIL_UTIL_BUILDDIR=`echo @abs_builddir@ | $with_pencil_util_builddir/config.status --file=-`
 	PENCIL_UTIL_SRCDIR=`echo @abs_srcdir@ | $with_pencil_util_builddir/config.status --file=-`
-	PENCIL_H_PATH="${PENCIL_UTIL_SRCDIR}/pencil-util/include/pencil.h"
 	;;
 system)
+	if test "x{HAS_PENCIL_H}"="xne"; then
+		AC_MSG_ERROR([pencil.h not found])
+	fi
 	;;
 esac
 
+AC_SUBST(PENCIL_UTIL_CPPARGS)
+PENCIL_UTIL_CPPARGS=""
+case "$with_pencil_util" in
+bundled|build)
+	PENCIL_UTIL_CPPARGS="-I${PENCIL_UTIL_SRCDIR}/include"
+	;;
+esac
 
-if test x"$with_pencil_util" = xbundled; then
-	AC_CONFIG_SUBDIRS(pencil-util)
-fi
 
 dnl Generate output
 AC_CONFIG_FILES([pencil-linker], [chmod +x pencil-linker])
 AC_CONFIG_FILES([pencil-optimizer], [chmod +x pencil-optimizer])
 AC_CONFIG_FILES([Makefile])
-dnl AC_CONFIG_FILES([testsuite/Makefile])
+
+if test x"$with_pencil_util" = xbundled; then
+	AC_CONFIG_SUBDIRS(pencil-util)
+fi
 
 AC_OUTPUT
