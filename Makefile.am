@@ -10,7 +10,7 @@ ACLOCAL_AMFLAGS = -I m4
 #override RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir $$abs_srcdir/testsuite
 #srcdir = ${abs_srcdir}
 
-#ALL=optimizer linker
+ALL=optimizer linker
 #SUBDIRS = testsuite
 DOCS = pencil optimizations
 
@@ -33,7 +33,8 @@ ANT_ANTLR3_CLASSPATH=@ANT_ANTLR3_CLASSPATH@
 export CLASSPATH:=@CLASSPATH@:${SCALAC_CLASSPATH}${SCALALIB_CLASSPATH}${SCALAREFLECT_CLASSPATH}${ANTLR3_CLASSPATH}${ANT_ANTLR3_CLASSPATH}
 
 
-#all-local: ${ALL}
+
+all-local: ${ALL}
 
 # These are phony (forced execution) because we do not catch all dependendencies; ant should handle them anyway
 .PHONY: pencil.jar antcommon linker.jar optimizer.jar
@@ -57,18 +58,10 @@ linker: linker.jar
 
 optimizer: optimizer.jar
 
-#check:${ALL:%=%-check}
-
-#%-check:
-#	mkdir -p "${abs_builddir}/testsuite"
-#	cd "${abs_builddir}/testsuite" && runtest --srcdir "${abs_srcdir}/testsuite" --tool $*
-
-
 clean-local: docs-clean packages-clean
 	${ANT} -f "${abs_srcdir}/build.xml" "-Dbuilddir=${abs_builddir}" clean
-
-
-
+	rm -f testsuite/code/pencil/simple/*.pencil.*
+	
 docs: ${DOCS:%=%-docs}
 
 pencil-docs:
@@ -121,7 +114,8 @@ testsuite/code/pencil_post.h: Makefile testsuite/code
 	fi; 
 
 check-optimizer: testsuite testsuite/code/pencil_pre.h testsuite testsuite/code/pencil_post.h optimizer
-	runtest --tool optimizer --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}"  --debug 
+	runtest --tool optimizer --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}"
 
 check-linker: testsuite testsuite/code/pencil_pre.h testsuite testsuite/code/pencil_post.h linker
 	runtest --tool linker --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}"
+	

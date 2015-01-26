@@ -1,13 +1,29 @@
-# autoconf and automake
-/autom4te.cache
+# ./autogen.sh
+/Makefile.in
 /aclocal.m4
-/compile
-/configure
-/depcomp
-/install-sh
-/missing
-/stamp-h1
+/autom4te.cache/
 /build-aux/
-Makefile.in
-*.sum
-*.log
+/configure
+
+# ./configure
+/config.log
+/Makefile
+/config.status
+/pencil-linker
+/pencil-optimizer
+
+# make
+/bin/
+/gen/
+/linker.jar
+/optimizer.jar
+/pencil.jar
+
+# make check
+/dbg.log
+/linker.log
+/linker.sum
+/optimizer.log
+/optimizer.sum
+/testsuite/code/pencil_pre.h
+/testsuite/code/pencil_post.h

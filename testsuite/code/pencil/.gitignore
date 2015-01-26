@@ -1,0 +1,4 @@
+# make check
+*.c
+*.check
+*.run
