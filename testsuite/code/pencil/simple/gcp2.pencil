@@ -20,21 +20,24 @@
  * THE SOFTWARE.
  */
 
-int foo(int i, int j, int k, int m[const static k])
+int foo(int i, int j, int k, int m[const restrict static k])
 {
+  int result;
   if (i < j) {
-    return m[1];
+    result = m[1];
   } else {
-    return m[0];
+    result = m[0];
   }
+  return result;
 }
 
-int test(int k, int m[const static k]) {
+int test(int k, int m[const restrict static k]) {
   int s = foo(1,2, k, m);
   return s;
 }
 
 /* optimizer {@require-option {-fgcp}} */
+/* optimizer {@require-option {-fno-inline}} */
 /* optimizer {@check {CHECK: cloned}} */
 /* all {int m[2] = {0,1};} */
 /* all {@assert {test(2, m) == 1}} */

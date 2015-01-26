@@ -103,7 +103,7 @@ tokens
   PENCIL='pencil';
   IVDEP='ivdep';
   INDEPENDENT='independent';
-  ACCESS='access';
+  REDUCTION='reduction';
   PENCIL_ACCESS='pencil_access';
   PROGRAM;
   FUNCTION;
@@ -143,7 +143,6 @@ tokens
   USER_TYPE;
   USER_STRUCT_TYPE;
   EXPRESSION_STATEMENT;
-  ANNOTATED_STATEMENT;
   TYPE_VOID='void';
   TYPE_SHORT='short';
   TYPE_INT='int';
@@ -308,30 +307,15 @@ attr: TYPE_CONST -> ^(CONST_FUNCTION)
 
 attribute:(ATTRIBUTE BRACKET_LEFT BRACKET_LEFT attr BRACKET_RIGHT BRACKET_RIGHT) -> attr;
 
-block: block_statement | labeled_statement  -> ^(BLOCK labeled_statement);
+block: block_statement | statement -> ^(BLOCK statement);
 
 block_statement: BLOCK_LEFT scop* BLOCK_RIGHT -> ^(BLOCK scop*);
 
-scop: PRAGMA_PREFIX PRAGMA SCOP annotated_statement PRAGMA_PREFIX PRAGMA ENDSCOP
-        -> ^(SCOP annotated_statement)
-     | annotated_statement -> annotated_statement;
+scop: PRAGMA_PREFIX PRAGMA SCOP statement PRAGMA_PREFIX PRAGMA ENDSCOP
+        -> ^(SCOP statement)
+     | statement -> statement;
 
-statement_access_pragma: PRAGMA_PREFIX PRAGMA PENCIL ACCESS block -> block;
-
-annotated_statement: labeled_statement -> labeled_statement
-                    | block -> block
-                    | statement_access_pragma labeled_statement
-                      -> ^(ANNOTATED_STATEMENT statement_access_pragma labeled_statement)
-                    | statement_access_pragma block
-                      -> ^(ANNOTATED_STATEMENT statement_access_pragma block);
-
-
-
-labeled_statement: label COLON statement -> ^(LABEL label statement) | statement -> statement;
-
-label: NAME;
-
-statement: (modify SEMICOLON) -> modify| pfor | pwhile | pif | pbreak | pcontinue | preturn | variable_decl | expression_statement | empty_statement;
+statement: (modify SEMICOLON) -> modify| pfor | pwhile | pif | pbreak | pcontinue | preturn | variable_decl | expression_statement | empty_statement | block_statement;
 
 empty_statement: SEMICOLON -> ^(EMPTY_STATEMENT);
 
@@ -342,9 +326,11 @@ for_directive: (PRAGMA_PREFIX PRAGMA PENCIL ->) (ivdep_pragma -> ivdep_pragma
 
 ivdep_pragma: IVDEP -> ^(IVDEP);
 
-independent_pragma:
-  INDEPENDENT -> ^(INDEPENDENT)
-  | INDEPENDENT BRACKET_LEFT name_list BRACKET_RIGHT -> ^(INDEPENDENT name_list);
+reduction_op: PLUS | MINUS | MULT | NAME;
+
+reduction_part: REDUCTION BRACKET_LEFT reduction_op COLON name_list BRACKET_RIGHT -> ^(REDUCTION reduction_op name_list);
+
+independent_pragma: INDEPENDENT reduction_part* -> ^(INDEPENDENT reduction_part*);
 
 pfor_guard_op: GREATER|LESS|LEQ|GEQ;
 

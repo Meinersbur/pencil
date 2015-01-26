@@ -31,8 +31,6 @@ class Printer extends Assertable {
 
   private var in_macro = false
 
-  private val glabels = HashMap[Operation, Int]()
-
   private def getVarName(in: Variable) = in.getName()
   private def getFuncName(in: Function) = in.getName
 
@@ -176,28 +174,26 @@ class Printer extends Assertable {
     process(in.ops)
   }
 
+  private def processSingleReduction(in: ReductionLoopProperty) = {
+    buff.append(" reduction")
+    buff.append('(')
+    buff.append(in.op)
+    buff.append(':')
+    processWithSep(in.variables, ",")
+    buff.append(')')
+  }
+
+  private def processIndependent(in: IndependentLoop) = {
+    buff.append("#pragma pencil independent")
+    in.reductions.foreach(processSingleReduction)
+    buff.append('\n')
+  }
+
   private def process(in: ForOperation): Unit = {
     for (option <- in.properties) {
       option match {
         case IvdepLoop => buff.append("#pragma pencil ivdep\n")
-        case labels: IndependentLoop => {
-          buff.append("#pragma pencil independent")
-          labels.labels match {
-            case Some(list) =>
-              buff.append("(")
-              var sep = ""
-              for (item <- list) {
-                val id = glabels.size
-                buff.append(sep)
-                buff.append("l" + id)
-                glabels += ((item, id))
-                sep = ","
-              }
-              buff.append(")")
-            case None =>
-          }
-          buff.append("\n")
-        }
+        case indep:IndependentLoop =>  processIndependent(indep)
       }
     }
     buff.append("for(")
@@ -267,20 +263,6 @@ class Printer extends Assertable {
   private def process(in: Operation): Unit = {
     if (in.scop) {
       buff.append("\n#pragma scop\n")
-    }
-    in.access match {
-      case Some(body) =>
-        in_macro = true
-        buff.append("\n#pragma pencil access")
-        process(body)
-        in_macro = false
-        buff.append("\n")
-      case None =>
-    }
-    val label = glabels.get(in)
-    label match {
-      case Some(id) => buff.append("l" + id + ":")
-      case None =>
     }
     in match {
       case mov: AssignmentOperation => process(mov)

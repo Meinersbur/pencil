@@ -40,9 +40,6 @@ class NamespaceStack {
 
   private val data = Stack[Namespace]()
 
-  /** Labeled operations. */
-  private val ldata = Map[String, Operation]()
-
   /**
     * Create new namespace.
     *
@@ -59,10 +56,6 @@ class NamespaceStack {
     */
   def pop() = {
     data.pop
-    if (data.size == 1) {
-      /* We are in the global namespace, so label information should be purged.  */
-      ldata.clear
-    }
   }
 
   /**
@@ -93,21 +86,6 @@ class NamespaceStack {
       }
     }
   }
-
-  /** Register new label.  */
-  def addLabel(in: Operation, name: String) = {
-    if (ldata.contains(name)) {
-      false
-    } else {
-      ldata += ((name, in))
-      true
-    }
-  }
-
-  /** Get operation associated with the given label.  */
-  def getLabel(label: String): Option[Operation] = {
-    ldata.get(label)
-  }
 }
 
 /**
@@ -121,6 +99,8 @@ class Transformer(val filename: String) extends Common with Assertable {
   private val callGraph = new CallGraph
 
   private val calls = new HashSet[Function]
+
+  private var return_counter: Int = 0;
 
   /**
     * Check whether given node has the expected tag and number of child nodes.
@@ -455,7 +435,7 @@ class Transformer(val filename: String) extends Common with Assertable {
           None
         } else {
           if (!(function.params, args).zipped.forall((variable, arg) =>
-            check(arg.expType.convertible(variable.expType), in, "invalid function argument for " + variable.name + " (" + arg.expType + " -> " + variable.expType + ")"))) {
+            check(arg.expType.convertible(variable.expType), in, "invalid function argument for " + variable.name))) {
             None
           } else {
             calls += function
@@ -630,29 +610,6 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  //Operations
-  private def transformIndependentPragma(in: Tree): Option[IndependentLoop] = {
-    checkNode(in, INDEPENDENT, "INDEPENDENT")
-    in.getChildCount match {
-      case 0 => Some(new IndependentLoop(None))
-      case 1 => {
-        val names = in.getChild(0)
-        checkNode(names, NAMES, "NAMES")
-        val labels = (intWrapper(0) to (names.getChildCount - 1)).map(i => {
-          val name = names.getChild(i)
-          checkNode(name, NAME, "NAME")
-          val op = varmap.getLabel(name.getText)
-          op match {
-            case Some(op) => Some(op)
-            case None => complain(name, "unknown label " + name.getText)
-          }
-        }).filter(_.isDefined).map(_.get)
-        Some(new IndependentLoop(Some(labels)))
-      }
-      case _ => ice(in, "unexpected number of children for independent node")
-    }
-  }
-
   private def transformRange(in: Tree): Option[Range] = {
     checkNode(in, RANGE, "RANGE", 3)
     val ninit = in.getChild(0)
@@ -738,7 +695,24 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  private def transformFor(in: Tree, access: Boolean): Option[ForOperation] = {
+  private def transformSingleReduction(in: Tree) = {
+    checkNode(in, REDUCTION, "REDUCTION", 2)
+    val op = in.getChild(0).getText
+    val names = in.getChild(1)
+    checkNode(names, NAMES, "NAMES")
+    val reduction_variables = (intWrapper(0) to (names.getChildCount - 1)).map(i =>
+      transformScalarVariable(names.getChild(i))).filter(_.isDefined).map(_.get)
+    ReductionLoopProperty(op, reduction_variables)
+  }
+
+  private def transformIndependentPragma(in: Tree) = {
+    checkNode(in, INDEPENDENT, "INDEPENDENT")
+    val reductions = (intWrapper(0) to (in.getChildCount - 1)).map(i =>
+      transformSingleReduction(in.getChild(i)))
+    Some(new IndependentLoop(reductions))
+  }
+
+  private def transformFor(in: Tree): Option[ForOperation] = {
     checkNode(in, FOR, "FOR", 3)
     val nattrs = in.getChild(0)
     val nrange = in.getChild(1)
@@ -746,7 +720,9 @@ class Transformer(val filename: String) extends Common with Assertable {
     varmap.push
     val range = transformRange(nrange)
     varmap.push
-    val ops = transformBlock(nbody, access, false)
+    val ops = transformBlock(nbody, false)
+    varmap.pop
+    varmap.pop
     val attrs = (intWrapper(0) to (nattrs.getChildCount - 1)).map(i => {
       val attr = nattrs.getChild(i)
       attr.getType match {
@@ -754,8 +730,6 @@ class Transformer(val filename: String) extends Common with Assertable {
         case INDEPENDENT => transformIndependentPragma(attr)
       }
     }).filter(_.isDefined).map(_.get)
-    varmap.pop
-    varmap.pop
     range match {
       case Some(range) => Some(new ForOperation(attrs, range, ops))
       case _ => {
@@ -764,17 +738,17 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  private def transformIf(in: Tree, access: Boolean): Option[IfOperation] = {
+  private def transformIf(in: Tree): Option[IfOperation] = {
     checkNode(in, IF, "IF")
     val guard = transformScalarExpression(in.getChild(0))
-    val body = transformBlock(in.getChild(1), access)
+    val body = transformBlock(in.getChild(1))
     guard match {
       case Some(guard) => {
         if (check(guard.expType.convertible(BooleanType(true)), in, "invalid guard expression")) {
           val actual_guard = convertScalar(guard, BooleanType(true))
           in.getChildCount match {
             case 2 => Some(new IfOperation(actual_guard, body, None))
-            case 3 => Some(new IfOperation(actual_guard, body, Some(transformBlock(in.getChild(2), access))))
+            case 3 => Some(new IfOperation(actual_guard, body, Some(transformBlock(in.getChild(2)))))
           }
         } else {
           None
@@ -786,10 +760,10 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  private def transformWhile(in: Tree, access: Boolean): Option[WhileOperation] = {
+  private def transformWhile(in: Tree): Option[WhileOperation] = {
     checkNode(in, WHILE, "WHILE", 2)
     val guard = transformScalarExpression(in.getChild(0))
-    val body = transformBlock(in.getChild(1), access)
+    val body = transformBlock(in.getChild(1))
     guard match {
       case Some(guard) =>
         if (check(guard.expType.convertible(BooleanType(true)), in, "invalid guard expression")) {
@@ -803,17 +777,18 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  private def transformBreak(in: Tree, access: Boolean): Option[BreakOperation] = {
+  private def transformBreak(in: Tree): Option[BreakOperation] = {
     checkNode(in, BREAK, "BREAK", 0)
     Some(new BreakOperation)
   }
 
-  private def transformContinue(in: Tree, access: Boolean): Option[ContinueOperation] = {
+  private def transformContinue(in: Tree): Option[ContinueOperation] = {
     checkNode(in, CONTINUE, "CONTINUE", 0)
     Some(new ContinueOperation)
   }
 
-  private def transformReturn(in: Tree, access: Boolean): Option[ReturnOperation] = {
+  private def transformReturn(in: Tree): Option[ReturnOperation] = {
+    return_counter += 1
     checkNode(in, RETURN, "RETURN")
     in.getChildCount match {
       case 0 =>
@@ -842,7 +817,7 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  private def transformModify(in: Tree, access: Boolean): Option[Operation] = {
+  private def transformModify(in: Tree): Option[Operation] = {
     checkNode(in, MODIFY, "MODIFY", 1)
     val node = in.getChild(0)
     val exp = node.getType match {
@@ -890,7 +865,7 @@ class Transformer(val filename: String) extends Common with Assertable {
     }
   }
 
-  private def transformExpressionStatement(in: Tree, access: Boolean): Option[Operation] = {
+  private def transformExpressionStatement(in: Tree): Option[Operation] = {
     checkNode(in, EXPRESSION_STATEMENT, "EXPRESSION_STATEMENT", 1)
     val op = in.getChild(0)
     op.getType match {
@@ -930,61 +905,32 @@ class Transformer(val filename: String) extends Common with Assertable {
 
   }
 
-  private def transformStatement(in: Tree, access: Boolean): Option[Operation] = {
-    val (lstmt, access_block) = if (in.getType == ANNOTATED_STATEMENT) {
-      val block = Some(transformBlock(in.getChild(0), true))
-      if (check(!access, in, "nested access blocks are not allowed")) {
-        (in.getChild(1), None)
-      } else {
-        (in.getChild(1), block)
-      }
-    } else {
-      (in, None)
-    }
-
-    val (stmt, label) = if (lstmt.getType == LABEL) {
-      (lstmt.getChild(1), Some(lstmt.getChild(0).getText))
-    } else {
-      (lstmt, None)
-    }
-
-    (stmt.getType match {
-      case FOR => transformFor(stmt, access)
-      case WHILE => transformWhile(stmt, access)
-      case IF => transformIf(stmt, access)
-      case BREAK => transformBreak(stmt, access)
-      case CONTINUE => transformContinue(stmt, access)
-      case RETURN => transformReturn(stmt, access)
+  private def transformStatement(in: Tree): Option[Operation] = {
+    in.getType match {
+      case FOR => transformFor(in)
+      case WHILE => transformWhile(in)
+      case IF => transformIf(in)
+      case BREAK => transformBreak(in)
+      case CONTINUE => transformContinue(in)
+      case RETURN => transformReturn(in)
       case EMPTY_STATEMENT => None
-      case BLOCK => Some(transformBlock(stmt, access))
-      case EXPRESSION_STATEMENT => transformExpressionStatement(stmt, access)
+      case BLOCK => Some(transformBlock(in))
+      case EXPRESSION_STATEMENT => transformExpressionStatement(in)
       case DECL => transformCallOrDecln(in)
-      case DECL_AND_INIT =>
-        transformVariableDeclarationStmt(in)
-      case MODIFY => transformModify(stmt, access)
-    }) match {
-      case Some(op) =>
-        op.access = access_block
-        label match {
-          case Some(lname) =>
-            check(varmap.addLabel(op, lname), in, "label" + lname + " has already been declared")
-          case None =>
-        }
-        Some(op)
-      case None => None
+      case DECL_AND_INIT => transformVariableDeclarationStmt(in)
+      case MODIFY => transformModify(in)
     }
   }
 
-  private def transformScop(in: Tree, access: Boolean) = {
+  private def transformScop(in: Tree) = {
     val (statement, scop) = (if (in.getType == SCOP) {
         checkNode(in, SCOP, "SCOP", 1)
-        check(!access, in, "pragma scop cannot be used inside access blocks")
         (in.getChild(0), true)
       } else {(in, false)})
     check(!in_scop || !scop, in, "Nested SCoPs are forbidden")
     val old_scop = in_scop
     in_scop = in_scop || scop
-    val ret = transformStatement(statement, access)
+    val ret = transformStatement(statement)
     ret match {
       case Some(statement) => statement.scop = scop
       case None =>
@@ -993,14 +939,22 @@ class Transformer(val filename: String) extends Common with Assertable {
     ret
   }
 
-  private def transformBlock(in: Tree, access: Boolean, push: Boolean = true): BlockOperation = {
+  private def transformBlock(in: Tree, push: Boolean = true): BlockOperation = {
     checkNode(in, BLOCK, "BLOCK")
     if (push) varmap.push
     val res = (intWrapper(0) to (in.getChildCount - 1)).map(i => {
-      transformScop(in.getChild(i), access)
+      transformScop(in.getChild(i))
     }).filter(_.isDefined).map(_.get)
     if (push) varmap.pop
     new BlockOperation(res)
+  }
+
+  private def checkFunctionReturn(body: BlockOperation, return_counter: Int, in: Tree, void: Boolean) = {
+    return_counter match {
+      case 0 => check(void, in, "Missing return statement for non-void function")
+      case 1 => check(lastIsReturn(body), in, "Return statement must be the last statement in the function")
+      case _ => check(false, in, "multiple return statements are not allowed")
+    }
   }
 
   private def transformFunction(in: Tree, static: Boolean, header: Boolean): Option[Function] = {
@@ -1066,10 +1020,13 @@ class Transformer(val filename: String) extends Common with Assertable {
         case _ => ice(attr, "unexpected function attribute")
       }
     }
+    return_counter = 0
     val fbody: Option[BlockOperation] = if (nbody.getType == EMPTY_BODY) {
       None
     } else {
-      Some(transformBlock(nbody, false))
+      val body = transformBlock(nbody, false)
+      checkFunctionReturn(body, return_counter, in, ntype.getType == TYPE_VOID)
+      Some(body)
     }
     varmap.pop
     if (lerror) None else {
@@ -1108,15 +1065,15 @@ class Transformer(val filename: String) extends Common with Assertable {
     for (i <- 0 to attrs.getChildCount() - 1) {
       attrs.getChild(i).getText() match {
         case "restrict" => {
-          check(!array_arg_is_restrict, in, "restrict attribute has already been supplied for this array")
+          check(!array_arg_is_restrict, in, "restrict has already been supplied for this array")
           array_arg_is_restrict = true
         }
         case "static" => {
-          check(!array_arg_is_static, in, "static attribute has already been supplied for this array")
+          check(!array_arg_is_static, in, "static has already been supplied for this array")
           array_arg_is_static = true
         }
         case "const" => {
-          check(!array_arg_is_const, in, "const attribute has already been supplied for this array")
+          check(!array_arg_is_const, in, "const has already been supplied for this array")
           array_arg_is_const = true
         }
       }
@@ -1211,12 +1168,15 @@ class Transformer(val filename: String) extends Common with Assertable {
       }
       case (Some(name), Some(at: ArrayType)) => {
         if (!arg) {
-          check(!array_arg_is_restrict, decl, "invalid restrict attribute for local array")
-          check(!array_arg_is_static, decl, "invalid static attribute for local array")
-          check(!array_arg_is_const, decl, "invalid const attribute for local array")
+          check(!array_arg_is_restrict, decl, "invalid restrict usage for local array")
+          check(!array_arg_is_static, decl, "invalid static usage for local array")
+          check(!array_arg_is_const, decl, "invalid const usage for local array")
         } else {
-          check(array_arg_is_static, decl, "missing mandatory static attribute for function argument")
-          check(array_arg_is_const, decl, "missing mandatory const attribute for function argument")
+          check(array_arg_is_static, decl, "missing mandatory static for function argument")
+          check(array_arg_is_const, decl, "missing mandatory const for function argument")
+
+          /* Make restrict mandatory. This can be changed in the future.  */
+          check(array_arg_is_restrict, decl, "missing mandatory restrict for function argument")
         }
         init match {
           case Some(sinit) => {
@@ -1652,7 +1612,7 @@ class Transformer(val filename: String) extends Common with Assertable {
             } else {
               val variable = function.params(0)
               if (!check(argvar.expType.convertible(variable.expType), fullTree, "invalid function argument for " +
-                variable.name + " (" + argvar.expType + " -> " + variable.expType + ")")) {
+                variable.name)) {
                 None
               } else {
                 calls += function

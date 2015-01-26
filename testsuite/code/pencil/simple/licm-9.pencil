@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-void foo(int A[const static 10], int N)
+void foo(int A[const restrict static 10], int N)
 {
     for(int i =0; i < N; i++)
     {
@@ -46,5 +46,3 @@ void foo(int A[const static 10], int N)
 /* optimizer {@check {CHECK: loop_invariant}} */
 /* optimizer {@check {CHECK: for}} */
 /* optimizer {@check {CHECK: loop_invariant}} */
-/* optimizer {@check {CHECK-NOT: lala}} */
-/* optimizer {@check {CHECK-NOT: gg}} */

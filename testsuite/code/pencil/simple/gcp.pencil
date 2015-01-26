@@ -22,14 +22,17 @@
 
 int foo(int i, int j, int k, int m)
 {
+  int result;
   if (k == m) {
-    return k;
-  }
-  if (i < j) {
-    return k;
+    result = k;
   } else {
-    return m;
+    if (i < j) {
+      result = k;
+    } else {
+      result = m;
+    }
   }
+  return result;
 }
 
 int test(int k, int m) {

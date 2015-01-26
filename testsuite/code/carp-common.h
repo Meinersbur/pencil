@@ -31,8 +31,3 @@
 #define false 0
 
 #undef assert
-void assert(int cond) {
-  if (!cond) {
-    exit (-1);
-  }
-}

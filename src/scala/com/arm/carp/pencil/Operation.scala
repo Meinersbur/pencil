@@ -37,10 +37,6 @@ case class Range(iter: ScalarVariableRef, low: ScalarExpression, upper: ScalarEx
 
 /** Base class for all PENCIL operations.  */
 abstract class Operation {
-  /**
-   * PENCIL access block associated with this operation.
-   */
-  var access: Option[BlockOperation] = None
   var info: Option[OperationPassInfo] = None
 
   protected def create_copy(): Operation
@@ -148,11 +144,12 @@ abstract class ForProperties
 /** This property indicates that the corresponding loop is marked as a candidate for vectorization. */
 object IvdepLoop extends ForProperties
 
+case class ReductionLoopProperty(op: String, variables: Seq[ScalarVariableRef])
+
 /**
- * This property indicates that loop statements `labels' have no loop carried dependencies.
- * If the statement list is omitted, all statements are considered as having no loop carried dependencies.
+ * This property indicates that loop statements have no loop carried dependencies.
  */
-class IndependentLoop(val labels: Option[Seq[Operation]]) extends ForProperties
+class IndependentLoop(val reductions: Seq[ReductionLoopProperty]) extends ForProperties
 
 /**
  * PENCIL for operation.
