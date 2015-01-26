@@ -101,9 +101,12 @@ esac
 
 AC_SUBST(PENCIL_UTIL_CPPARGS)
 PENCIL_UTIL_CPPARGS=""
+AC_SUBST(PENCIL_H_PATH)
+PENCIL_H_PATH="pencil.h"
 case "$with_pencil_util" in
 bundled|build)
 	PENCIL_UTIL_CPPARGS="-I${PENCIL_UTIL_SRCDIR}/include"
+	PENCIL_H_PATH="${PENCIL_UTIL_SRCDIR}/include/pencil.h"
 	;;
 esac
 
@@ -112,6 +115,7 @@ dnl Generate output
 AC_CONFIG_FILES([pencil-linker], [chmod +x pencil-linker])
 AC_CONFIG_FILES([pencil-optimizer], [chmod +x pencil-optimizer])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([testsuite/code/carp-common.h])
 
 if test x"$with_pencil_util" = xbundled; then
 	AC_CONFIG_SUBDIRS(pencil-util)
