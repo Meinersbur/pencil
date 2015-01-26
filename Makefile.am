@@ -85,7 +85,7 @@ optimizations-docs-clean:
 
 	
 .PHONY: packages
-packages:
+packages: linker optimizer
 	fakeroot ./create-packages.sh
 
 packages-clean:

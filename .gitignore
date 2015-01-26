@@ -27,3 +27,8 @@
 /optimizer.sum
 /testsuite/code/pencil_pre.h
 /testsuite/code/pencil_post.h
+
+# make packages
+/work/
+/*.rpm
+/*.dep

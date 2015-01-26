@@ -40,7 +40,7 @@ mkdir -p ${WORK_ROOT}
 make install PREFIX=${WORK_ROOT}
 cp -r ${DEB_PACKAGE_ROOT}/DEBIAN ${WORK_ROOT}
 chown -R root:root ${WORK_ROOT}
-dpkg-deb -b ${WORK_ROOT} ${DEB_PACKAGE}
+dpkg-deb -b --scripts ${WORK_ROOT} ${DEB_PACKAGE}
 
 # Create RPM package
 alien --to-rpm ${DEB_PACKAGE}
