@@ -79,10 +79,11 @@ AC_CHECK_HEADERS([pencil.h], [HAVE_PENCIL_H=yes], [HAVE_PENCIL_H=no])
 dnl pencil runtime
 AC_SUBST(PENCIL_UTIL_BUILDDIR)
 AC_SUBST(PENCIL_UTIL_SRCDIR)
+AM_CONDITIONAL(HAS_PENCIL_UTIL, test "$with_pencil_util" != "no")
 AX_SUBMODULE(pencil-util,no|build|bundled|system,bundled)
 case "$with_pencil_util" in
 no)
-	#TODO: disable check
+	#Disabled check using conditional HAS_PENCIL_UTIL
 	;;
 bundled)
 	PENCIL_UTIL_BUILDDIR="${abs_builddir}/pencil-util"
@@ -93,7 +94,7 @@ build)
 	PENCIL_UTIL_SRCDIR=`echo @abs_srcdir@ | $with_pencil_util_builddir/config.status --file=-`
 	;;
 system)
-	if test "x{HAS_PENCIL_H}"="xne"; then
+	if test "x{HAS_PENCIL_H}" != "xyes"; then
 		AC_MSG_ERROR([pencil.h not found])
 	fi
 	;;

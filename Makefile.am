@@ -33,7 +33,10 @@ ANT_ANTLR3_CLASSPATH=@ANT_ANTLR3_CLASSPATH@
 export CLASSPATH:=@CLASSPATH@:${SCALAC_CLASSPATH}${SCALALIB_CLASSPATH}${SCALAREFLECT_CLASSPATH}${ANTLR3_CLASSPATH}${ANT_ANTLR3_CLASSPATH}
 
 CLEANFILES = dbg.log linker.log linker.sum optimizer.log optimizer.sum \
-	testsuite/code/pencil_pre.h testsuite/code/pencil_post.h
+ testsuite/code/pencil_pre.h testsuite/code/pencil_post.h
+
+EXTRA_DIST = README.txt LICENSE.txt src res example build.xml autogen.sh create-packages.sh testsuite
+
 
 
 all-local: ${ALL}
@@ -95,9 +98,12 @@ packages-clean:
 bin_SCRIPTS = pencil-linker pencil-optimizer
 pkgdata_DATA = linker.jar optimizer.jar pencil.jar
 
-check: check-optimizer check-linker
 
 .PHONY: check-optimizer check-linker
+
+if HAS_PENCIL_UTIL
+
+check-local: check-optimizer check-linker
 
 testsuite/code/pencil_pre.h: Makefile testsuite/code
 	mkdir -p "${abs_builddir}/testsuite/code"
@@ -110,3 +116,5 @@ check-optimizer: testsuite/code/pencil_pre.h optimizer
 check-linker: testsuite/code/pencil_pre.h linker
 	mkdir -p "${abs_builddir}/testsuite/code/pencil/simple"
 	runtest --tool linker --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}" --debug
+
+endif
