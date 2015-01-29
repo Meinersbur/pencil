@@ -79,6 +79,8 @@ AC_CHECK_HEADERS([pencil.h], [HAVE_PENCIL_H=yes], [HAVE_PENCIL_H=no])
 dnl pencil runtime
 AC_SUBST(PENCIL_UTIL_BUILDDIR)
 AC_SUBST(PENCIL_UTIL_SRCDIR)
+AC_SUBST(PENCIL_UTIL_SUBDIR)
+PENCIL_UTIL_SUBDIR=
 AM_CONDITIONAL(HAS_PENCIL_UTIL, test "$with_pencil_util" != "no")
 AX_SUBMODULE(pencil-util,no|build|bundled|system,bundled)
 case "$with_pencil_util" in
@@ -86,6 +88,7 @@ no)
 	#Disabled check using conditional HAS_PENCIL_UTIL
 	;;
 bundled)
+	PENCIL_UTIL_SUBDIR=pencil-util
 	PENCIL_UTIL_BUILDDIR="${abs_builddir}/pencil-util"
 	PENCIL_UTIL_SRCDIR="${abs_srcdir}/pencil-util"
 	;;

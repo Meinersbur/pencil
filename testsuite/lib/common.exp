@@ -174,7 +174,7 @@ proc prepare {} {
     set input_basename [file tail $::input_filename]
     set testoutdir "${::objdir}/code/pencil/simple"
     set ::output_filename "${testoutdir}/${input_basename}.${::tool_name}.c"
-    set ::check_filename "${::input_filename}.${::tool_name}.check"
+    set ::check_filename "${testoutdir}/${input_basename}.${::tool_name}.check"
     set ::binary "${testoutdir}/${input_basename}.${::tool_name}.run"
     set ::check_file [open $::check_filename w]
     set ::should_compile true
