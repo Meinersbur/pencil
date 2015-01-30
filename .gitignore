@@ -36,3 +36,4 @@
 /work/
 /*.rpm
 /*.dep
+*.orig

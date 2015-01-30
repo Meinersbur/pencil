@@ -1,14 +1,6 @@
 # @configure_input@
 
 ACLOCAL_AMFLAGS = -I m4
-#AUTOMAKE_OPTIONS = dejagnu
-
-#EXTRA_DEJAGNU_SITE_CONFIG = testsuite/site.exp
-#DEJATOOL = optimizer 
-#linker
-#RUNTESTFLAGS = --debug
-#override RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir $$abs_srcdir/testsuite
-#srcdir = ${abs_srcdir}
 
 ALL=optimizer linker
 SUBDIRS = @PENCIL_UTIL_SUBDIR@
