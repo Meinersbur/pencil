@@ -18,8 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+AC_PREREQ([2.69])
 AC_INIT([pencil], [0.01], [carp@arm.com])
 AC_CONFIG_MACRO_DIR([m4])
+
+dnl Automake
+AC_CONFIG_AUX_DIR([build-aux])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_MAINTAINER_MODE([enable])
 
 dnl Scala installation
 AC_SUBST(SCALA_HOME)
