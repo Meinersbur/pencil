@@ -27,7 +27,7 @@ export CLASSPATH:=@CLASSPATH@:${SCALAC_CLASSPATH}${SCALALIB_CLASSPATH}${SCALAREF
 CLEANFILES = dbg.log linker.log linker.sum optimizer.log optimizer.sum \
  testsuite/code/pencil_pre.h testsuite/code/pencil_post.h
 
-EXTRA_DIST = README.txt LICENSE.txt src res example build.xml autogen.sh create-packages.sh testsuite grammar/pencil.g etc/README example/Example.scala Makefile README.txt
+EXTRA_DIST = README.txt LICENCE.txt src res example build.xml autogen.sh create-packages.sh testsuite grammar/pencil.g etc/README example/Example.scala Makefile README.txt
 
 
 
