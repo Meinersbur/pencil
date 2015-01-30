@@ -27,24 +27,34 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_MAINTAINER_MODE([enable])
 
-dnl Scala installation
-AC_SUBST(SCALA_HOME)
-AC_SUBST(SCALA_RUNTIME)
-AC_ARG_WITH([scala],
-  [AS_HELP_STRING([--with-scala=dir],[directory containing scala])],
-  [
-   SCALA_HOME="$with_scala"
-   SCALA_RUNTIME="$with_scala"/bin/scala
-  ],
-  [
-   SCALA_HOME="/usr/share/scala"
-   SCALA_RUNTIME=scala
-  ]
-)
+dnl Programs
+AC_PROG_SED
+AX_PROG_JAVAC
+AX_PROG_SCALA
+AC_PATH_PROG(ANT, ant)
+AC_PATH_PROG(SCALADOC, scaladoc)
 
-AC_CHECK_FILE(["$SCALA_HOME/lib/scala-compiler.jar"],[],[AC_MSG_ERROR([could not find file])])
-AC_CHECK_FILE(["$SCALA_HOME/lib/scala-library.jar"],[],[AC_MSG_ERROR([could not find file])])
-AC_CHECK_FILE(["$SCALA_HOME/lib/scala-reflect.jar"],[],[AC_MSG_ERROR([could not find file])])
+abs_builddir=`pwd` # ${ac_abs_builddir} 
+abs_srcdir=$(readlink -m "${srcdir}")
+
+dnl Paths to required jars
+AX_XTRA_CLASSPATH(SCALAC_CLASSPATH,scala.tools.ant.Scalac,scala-compiler.jar,[],[AC_MSG_ERROR([Could not find scala-compiler.jar, add it to CLASSPATH])])
+AC_SUBST(SCALAC_CLASSPATH)
+
+AX_XTRA_CLASSPATH(SCALALIB_CLASSPATH,scala.App,scala-library.jar,[],[AC_MSG_ERROR([Could not find scala-library.jar, add it to CLASSPATH])])
+AC_SUBST(SCALALIB_CLASSPATH)
+
+AX_XTRA_CLASSPATH(SCALAREFLECT_CLASSPATH,scala.reflect.api.BuildUtils,scala-reflect.jar,[],[AC_MSG_ERROR([Could not find scala-reflect.jar, add it to CLASSPATH])])
+AC_SUBST(SCALAREFLECT_CLASSPATH)
+
+AX_XTRA_CLASSPATH(ANTLR3_CLASSPATH,org.antlr.Tool,antlr3.jar,[],[AC_MSG_ERROR([Could not find antlr3.jar, add it to CLASSPATH])])
+AC_SUBST(ANTLR3_CLASSPATH)
+
+AX_XTRA_CLASSPATH(ANT_ANTLR3_CLASSPATH,org.apache.tools.ant.antlr.ANTLR3,ant-antlr3.jar,[],[AC_MSG_ERROR([Could not find ant-antlr3.jar, add it to CLASSPATH])])
+AC_SUBST(ANT_ANTLR3_CLASSPATH)
+
+AC_SUBST(CLASSPATH)
+
 
 dnl FileCheck installation
 AC_SUBST(FILE_CHECK_TOOL)
@@ -63,14 +73,6 @@ else
   FILE_CHECK_TOOL=`PATH=$PATH:$FILE_CHECK_HOME which FileCheck`
 fi
 
-dnl ANTLR3 jar
-AC_SUBST(ANTLR_HOME)
-AC_ARG_WITH([antlr3],
-  [AS_HELP_STRING([--with-antlr3=dir],[directory containing ANTLR3 jars])],
-  [ANTLR_HOME="$with_antlr3"],
-  [AC_MSG_ERROR([please specify path to ANTLR3 jars using --with-antlr3])]
-)
-AC_CHECK_FILE(["$ANTLR_HOME/antlr3.jar"],[],[AC_MSG_ERROR([could not find file])])
 
 dnl ant-antlr3 jar
 AC_SUBST(ANT_ANTLR_HOME)

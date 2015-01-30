@@ -42,7 +42,7 @@ class CallGraph {
       case Some(calls) => calls.add(called)
     }
   }
-
+ 
   private def getCalls(in: Function) = {
     graph.get(in) match {
       case Some(calls) => calls
@@ -70,7 +70,7 @@ class CallGraph {
   /**
     * Check for recursion.
     *
-    * @returns Function, which is recursively calling itself (directly or indirectly).
+    * @return Function, which is recursively calling itself (directly or indirectly).
     */
   def getRecursion():Option[Function] = {
     if(graph.isEmpty) {
