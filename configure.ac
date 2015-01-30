@@ -74,18 +74,56 @@ else
 fi
 
 
-dnl ant-antlr3 jar
-AC_SUBST(ANT_ANTLR_HOME)
-AC_ARG_WITH([ant-antlr3],
-  [AS_HELP_STRING([--with-ant-antlr3=dir],[directory containing ant-antlr3 jar])],
-  [ANT_ANTLR_HOME="$with_ant_antlr3"],
-  [ANT_ANTLR_HOME="$ANTLR_HOME"]
-)
-AC_CHECK_FILE(["$ANT_ANTLR_HOME/ant-antlr3.jar"],[],[AC_MSG_ERROR([could not find file])])
+AC_CHECK_HEADERS([pencil.h], [HAVE_PENCIL_H=yes], [HAVE_PENCIL_H=no])
+
+dnl pencil runtime
+AC_SUBST(PENCIL_UTIL_BUILDDIR)
+AC_SUBST(PENCIL_UTIL_SRCDIR)
+AC_SUBST(PENCIL_UTIL_SUBDIR)
+PENCIL_UTIL_SUBDIR=
+AM_CONDITIONAL(HAS_PENCIL_UTIL, test "$with_pencil_util" != "no")
+AX_SUBMODULE(pencil-util,no|build|bundled|system,bundled)
+case "$with_pencil_util" in
+no)
+	#Disabled check using conditional HAS_PENCIL_UTIL
+	;;
+bundled)
+	PENCIL_UTIL_SUBDIR=pencil-util
+	PENCIL_UTIL_BUILDDIR="${abs_builddir}/pencil-util"
+	PENCIL_UTIL_SRCDIR="${abs_srcdir}/pencil-util"
+	;;
+build)
+	PENCIL_UTIL_BUILDDIR=`echo @abs_builddir@ | $with_pencil_util_builddir/config.status --file=-`
+	PENCIL_UTIL_SRCDIR=`echo @abs_srcdir@ | $with_pencil_util_builddir/config.status --file=-`
+	;;
+system)
+	if test "x{HAS_PENCIL_H}" != "xyes"; then
+		AC_MSG_ERROR([pencil.h not found])
+	fi
+	;;
+esac
+
+AC_SUBST(PENCIL_UTIL_CPPARGS)
+PENCIL_UTIL_CPPARGS=""
+AC_SUBST(PENCIL_H_PATH)
+PENCIL_H_PATH="pencil.h"
+case "$with_pencil_util" in
+bundled|build)
+	PENCIL_UTIL_CPPARGS="-I${PENCIL_UTIL_SRCDIR}/include"
+	PENCIL_H_PATH="${PENCIL_UTIL_SRCDIR}/include/pencil.h"
+	;;
+esac
+
 
 AC_CONFIG_FILES([linker], [chmod +x linker])
 AC_CONFIG_FILES([optimizer], [chmod +x optimizer])
 AC_CONFIG_FILES([pencil-linker], [chmod +x pencil-linker])
 AC_CONFIG_FILES([pencil-optimizer], [chmod +x pencil-optimizer])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([testsuite/code/carp-common.h])
+
+if test x"$with_pencil_util" = xbundled; then
+	AC_CONFIG_SUBDIRS(pencil-util)
+fi
+
 AC_OUTPUT

@@ -3,6 +3,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 ALL=optimizer linker
+SUBDIRS = @PENCIL_UTIL_SUBDIR@
 DOCS = pencil optimizations
 
 SCALADOC=@SCALADOC@
