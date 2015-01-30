@@ -81,7 +81,7 @@ proc run_tool {} {
     set expected $error
   }
 
-  spawn "../$::tool_name" -o "$::output_filename" "$::input_filename" {*}$::additional_option {*}$::additional_files --include  code/pencil.h
+  spawn "./pencil-$::tool_name" -o "$::output_filename" "$::input_filename" {*}$::additional_option {*}$::additional_files --include "${::objdir}/code/pencil_pre.h"
 
   # Collect all output
   set lines {}
@@ -160,7 +160,7 @@ proc analyze {} {
 }
 
 proc compile_c_weak {} {
-  spawn gcc -w -std=c99 -I ../pencil-util/include -include "code/carp-common.h" "$::output_filename" -c -o /dev/null
+  spawn gcc -w -std=c99 -include "${::objdir}/code/carp-common.h" "$::output_filename" -c -o /dev/null
   catch wait result
   set code [lindex $result 3]
   if {$code != 0} {
@@ -171,9 +171,11 @@ proc compile_c_weak {} {
 }
 
 proc prepare {} {
-    set ::output_filename "${::input_filename}.${::tool_name}.c"
-    set ::check_filename "${::input_filename}.${::tool_name}.check"
-    set ::binary "${::input_filename}.${::tool_name}.run"
+    set input_basename [file tail $::input_filename]
+    set testoutdir "${::objdir}/code/pencil/simple"
+    set ::output_filename "${testoutdir}/${input_basename}.${::tool_name}.c"
+    set ::check_filename "${testoutdir}/${input_basename}.${::tool_name}.check"
+    set ::binary "${testoutdir}/${input_basename}.${::tool_name}.run"
     set ::check_file [open $::check_filename w]
     set ::should_compile true
     set ::expect_linker_error false
@@ -198,7 +200,7 @@ proc prepare_for_compilation {} {
 
 proc compile_c {} {
     prepare_for_compilation
-    spawn gcc -w -std=c99 -I../pencil-util/include -include "code/carp-common.h"  "${::output_filename}" -o "${::binary}" -lm
+    spawn gcc -w -std=c99 -include "${::objdir}/code/carp-common.h" "${::output_filename}" -o "${::binary}" -lm
     catch wait result
     set code [lindex $result 3]
     if {$code != 0} {
@@ -209,7 +211,7 @@ proc compile_c {} {
 }
 
 proc run_binary {} {
-  spawn "./${::binary}"
+  spawn "${::binary}"
   catch wait result
   set code [lindex $result 3]
   if {$code != 0} {

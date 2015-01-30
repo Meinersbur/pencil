@@ -89,3 +89,24 @@ packages-clean:
 
 bin_SCRIPTS = pencil-linker pencil-optimizer
 pkgdata_DATA = linker.jar optimizer.jar pencil.jar
+
+
+.PHONY: check-optimizer check-linker
+
+if HAS_PENCIL_UTIL
+
+check-local: check-optimizer check-linker
+
+testsuite/code/pencil_pre.h: Makefile testsuite/code
+	mkdir -p "${abs_builddir}/testsuite/code"
+	echo "#include <pencil.h>" | cpp -P -D__PENCIL__ @PENCIL_UTIL_CPPARGS@ > $@
+
+check-optimizer: testsuite/code/pencil_pre.h optimizer
+	mkdir -p "${abs_builddir}/testsuite/code/pencil/simple"
+	runtest --tool optimizer --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}" --debug
+
+check-linker: testsuite/code/pencil_pre.h linker
+	mkdir -p "${abs_builddir}/testsuite/code/pencil/simple"
+	runtest --tool linker --srdir "${abs_srcdir}/testsuite" --objdir "${abs_builddir}/testsuite" --outdir "${abs_builddir}" --debug
+
+endif

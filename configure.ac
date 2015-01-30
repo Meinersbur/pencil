@@ -115,8 +115,7 @@ bundled|build)
 esac
 
 
-AC_CONFIG_FILES([linker], [chmod +x linker])
-AC_CONFIG_FILES([optimizer], [chmod +x optimizer])
+dnl Generate output
 AC_CONFIG_FILES([pencil-linker], [chmod +x pencil-linker])
 AC_CONFIG_FILES([pencil-optimizer], [chmod +x pencil-optimizer])
 AC_CONFIG_FILES([Makefile])

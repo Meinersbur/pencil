@@ -21,9 +21,8 @@
  */
 
 #include <stdlib.h>
-#define inline
-#include <pencil.h>
-#undef inline
+
+#include <@PENCIL_H_PATH@>
 
 #define SUCCESS 0
 #define FAIL 255
